@@ -1,9 +1,9 @@
 const express = require('express');
-const router = express.Router(); 
+const routerS = express.Router(); 
 const dataspurceController = require('../controller/data.source');
-router.post('/', dataspurceController.createDataSource);
-router.get('/:sourceid', dataspurceController.getDataSource);
-router.put('/:sourceid', dataspurceController.updateDataSource);
-router.delete('/:sourceid', dataspurceController.deleteDataSource);
+routerS.post('/', dataspurceController.createDataSource);
+routerS.get('/:sourceid', dataspurceController.getDataSource);
+routerS.put('/:sourceid', dataspurceController.updateDataSource);
+routerS.delete('/:sourceid', dataspurceController.deleteDataSource);
 
-module.exports = router; 
+module.exports = routerS; 
