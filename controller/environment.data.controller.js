@@ -1,21 +1,8 @@
 const db = require('../config/db');
-const multer = require('multer');
-const path = require('path');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    const extname = path.extname(file.originalname);
-    cb(null, file.fieldname + '-' + Date.now() + extname);
-  },
-});
-
-const upload = multer({ storage });
 
 // Create 
-exports.createEnvironment = upload.single('image'), (req, res) => {
+exports.createEnvironment = (req, res) => {
   const {
     DataID,
     UserID,
@@ -33,19 +20,20 @@ exports.createEnvironment = upload.single('image'), (req, res) => {
     NoiseLevels,
     Weather,
     EventDescription,
-    Note,
+    Note
   } = req.body;
 
-  const image = req.file ? req.file.path : null;
+
 
   const sql = `
     INSERT INTO environment (
-      UserID, SourceID, TimeStamp, AirQuality, Humidity, WaterQuality,
+      DataID, UserID, SourceID, TimeStamp, AirQuality, Humidity, WaterQuality,
       BiodiversityMetrics, WindSpeed, RainFall, PollutionLevels, SoilQuality,
-      UvIndex, NoiseLevels, Weather, EventDescription, Note, Image
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      UvIndex, NoiseLevels, Weather, EventDescription, Note
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
 
   const values = [
+    DataID,
     UserID,
     SourceID,
     TimeStamp,
@@ -61,8 +49,7 @@ exports.createEnvironment = upload.single('image'), (req, res) => {
     NoiseLevels,
     Weather,
     EventDescription,
-    Note,
-    image,
+    Note
   ];
 
   db.query(sql, values, (err, results) => {
@@ -73,7 +60,6 @@ exports.createEnvironment = upload.single('image'), (req, res) => {
       res.status(201).json({ message: 'Environment record created' });
     }
   });
-  
 };
 
 // Retrieve 
@@ -167,4 +153,3 @@ exports.getEnvironment = (req, res) => {
       }
     });
   };
-
