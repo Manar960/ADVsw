@@ -1,91 +1,30 @@
-const db = require('../config/db');
+const { ref, uploadBytes } = require("firebase/storage");
+const storage = require("../config/fiarbase");
+const multer = require("multer");
 
+const upload = multer({ storage: multer.memoryStorage() });
 
-// Create 
-exports.createImage = (req, res) => {
-  const {
-    ImageID,
-    UserID,
-    ImageURL
-  } = req.body;
-
-
-
-  const sql = `
-    INSERT INTO images (
-        ImageID,
-        UserID,
-        ImageURL
-    ) VALUES (?, ?, ?)`;
-
-  const values = [
-    ImageID,
-    UserID,
-    ImageURL
-  ];
-
-  db.query(sql, values, (err, results) => {
+exports.uploadFile = (req, res, next) => {
+  upload.single('file')(req, res, (err) => {
     if (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
-    } else {
-      res.status(201).json({ message: 'image record created' });
+      return res.status(400).json({ message: err.message });
     }
+
+    if (!req.file) {
+      res.status(400).json({ message: "No file provided" });
+      return;
+    }
+
+    const storageRef = ref(storage, `files/${req.file.originalname}`);
+
+    // تأكد من أن req.file.buffer معرفة بشكل صحيح
+    if (!req.file.buffer) {
+      return res.status(400).json({ message: "File buffer is missing" });
+    }
+
+    uploadBytes(storageRef, req.file.buffer).then((snapshot) => {
+      console.log("file uploaded");
+      res.json({ message: "File uploaded successfully" });
+    });
   });
 };
-
-// Retrieve 
-exports.getImage = (req, res) => {
-    const imageid = req.params.imageid;
-  
-    const sql = 'SELECT * FROM images WHERE ImageID = ?';
-    const values = [imageid];
-  
-    db.query(sql, values, (err, results) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
-      } else {
-        if (results.length > 0) {
-          res.status(200).json(results[0]);
-        } else {
-          res.status(404).json({ message: 'imageid record not found' });
-        }
-      }
-    });
-  };
-  
-  
-  // Delete 
-  exports.deleteImage = (req, res) => {
-    const imageid = req.params.imageid;
-  
-    const sql = 'DELETE FROM images WHERE ImageID = ?';
-    const values = [imageid];
-  
-    db.query(sql, values, (err, results) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
-      } else {
-        res.status(200).json({ message: 'image record deleted' });
-      }
-    });
-  };
-
-  exports.getAllUserImages = (req, res) => {
-    const userid = req.params.userid; 
-  
-    const sql = 'SELECT * FROM images WHERE UserID = ?';
-    const values = [userid];
-  
-    db.query(sql, values, (err, results) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
-      } else {
-        res.status(200).json(results);
-      }
-    });
-  };
-  
