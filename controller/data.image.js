@@ -17,7 +17,6 @@ exports.uploadFile = (req, res, next) => {
 
     const storageRef = ref(storage, `files/${req.file.originalname}`);
 
-    // تأكد من أن req.file.buffer معرفة بشكل صحيح
     if (!req.file.buffer) {
       return res.status(400).json({ message: "File buffer is missing" });
     }
