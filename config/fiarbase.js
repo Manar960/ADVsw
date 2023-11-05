@@ -1,4 +1,4 @@
-const firebsae = require("firebase/app");
+const { initializeApp } = require("firebase/app");
 const { getStorage } = require("firebase/storage");
 
 const firebaseConfig = {
@@ -11,7 +11,7 @@ const firebaseConfig = {
     measurementId : "G-4YTYKWYX6R"
 };
 
-const app = firebsae.initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 
 module.exports = storage;
