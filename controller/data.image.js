@@ -2,7 +2,7 @@ const { ref, uploadBytes } = require("firebase/storage");
 const storage = require("../config/fiarbase");
 const multer = require("multer");
 const {deleteObject } = require("firebase/storage");
-
+const { listAll } = require("firebase/storage");
 const allowedFileNames = ['AirQuality', 'Humidity', 'WaterQuality', 'BiodiversityMetrics', 'WindSpeed', 'RainFall', 'PollutionLevels', 'SoilQuality', 'UvIndex', 'NoiseLevels', 'Weather'];
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -56,4 +56,26 @@ exports.uploadFile = (req, res, next) => {
       res.json({ message: "File uploaded successfully" });
     });
   });
+};
+
+exports.listImages = async (req, res) => {
+  const folderName = req.params.folderName;
+
+  if (!allowedFileNames.includes(folderName)) {
+    return res.status(400).json({ message: "Invalid folder name" });
+  }
+
+  const folderRef = ref(storage, `files/${folderName}`);
+
+  try {
+    const listResult = await listAll(folderRef);
+    const imageUrls = listResult.items.map((item) => {
+      return item.fullPath;
+    });
+
+    res.json(imageUrls);
+  } catch (error) {
+    console.error("Error listing images:", error);
+    res.status(500).json({ message: "Failed to list images" });
+  }
 };
