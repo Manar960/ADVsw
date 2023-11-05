@@ -1,5 +1,5 @@
 const { initializeApp } = require("firebase/app");
-const { getStorage } = require("firebase/storage");
+const { getStorage, ref, uploadBytes, deleteObject } = require("firebase/storage");
 
 const firebaseConfig = {
     apiKey : "AIzaSyDL2TeISnLIyUXnJr0jTBDZQnQ_R8ze58Y",
