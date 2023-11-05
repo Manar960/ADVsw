@@ -2,10 +2,19 @@ const { ref, uploadBytes } = require("firebase/storage");
 const storage = require("../config/fiarbase");
 const multer = require("multer");
 
+// تعريف أسماء الفايل المسموح بها
+const allowedFileNames = ['AirQuality', 'Humidity', 'WaterQuality', 'BiodiversityMetrics', 'WindSpeed', 'RainFall', 'PollutionLevels', 'SoilQuality', 'UvIndex', 'NoiseLevels', 'Weather'];
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 exports.uploadFile = (req, res, next) => {
-  upload.single('file')(req, res, (err) => {
+  const fileName = req.params.fileName; // اسم الفايل سيأتي من الطلب
+
+  if (!allowedFileNames.includes(fileName)) {
+    return res.status(400).json({ message: "Invalid file name" });
+  }
+
+  upload.single(fileName)(req, res, (err) => {
     if (err) {
       return res.status(400).json({ message: err.message });
     }
@@ -15,9 +24,8 @@ exports.uploadFile = (req, res, next) => {
       return;
     }
 
-    const storageRef = ref(storage, `files/${req.file.originalname}`);
+    const storageRef = ref(storage, `files/${fileName}/${req.file.originalname}`);
 
-    // تأكد من أن req.file.buffer معرفة بشكل صحيح
     if (!req.file.buffer) {
       return res.status(400).json({ message: "File buffer is missing" });
     }
