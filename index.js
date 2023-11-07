@@ -7,6 +7,7 @@ const source = require('./routes/data.source');
 const environmentRouter = require('./routes/environment.router');
 const image = require('./routes/image.router');
 const comment = require('./routes/comment.router');
+const report = require('./routes/report.router');
 
 app.use(express.json());
 app.use(cors());
@@ -17,6 +18,7 @@ app.use('/api/dataSources', source);
 app.use('/api/environment', environmentRouter);
 app.use('/api/img', image);
 app.use('/api/comm', comment);
+app.use('/api/report', report);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
