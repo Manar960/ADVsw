@@ -76,6 +76,7 @@ exports.deleteUser = (req, res) => {
     }
   });
 };
+
 exports.searchUsers = (req, res) => {
     const { interests, location } = req.query;
   
