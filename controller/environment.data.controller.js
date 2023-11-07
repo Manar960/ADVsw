@@ -30,8 +30,8 @@ exports.createEnvironment = (req, res) => {
     INSERT INTO environment (
       DataID, UserID, SourceID, TimeStamp, AirQuality, Humidity, WaterQuality,
       BiodiversityMetrics, WindSpeed, RainFall, PollutionLevels, SoilQuality,
-      UvIndex, NoiseLevels, Weather, EventDescription, Note,Location
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`;
+      UvIndex, NoiseLevels, Weather, EventDescription, Note
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
 
   const values = [
     DataID,
@@ -101,8 +101,7 @@ exports.getEnvironment = (req, res) => {
       NoiseLevels,
       Weather,
       EventDescription,
-      Note,
-      Location
+      Note
     } = req.body;
   
     const sql = `
@@ -110,7 +109,7 @@ exports.getEnvironment = (req, res) => {
       SET AirQuality = ?, Humidity = ?, WaterQuality = ?,
       BiodiversityMetrics = ?, WindSpeed = ?, RainFall = ?,
       PollutionLevels = ?, SoilQuality = ?, UvIndex = ?,
-      NoiseLevels = ?, Weather = ?, EventDescription = ?, Note = ?,Location=?
+      NoiseLevels = ?, Weather = ?, EventDescription = ?, Note = ?
       WHERE DataID = ?`;
   
     const values = [
@@ -127,7 +126,6 @@ exports.getEnvironment = (req, res) => {
       Weather,
       EventDescription,
       Note,
-      Location,
       dataid
     ];
   
