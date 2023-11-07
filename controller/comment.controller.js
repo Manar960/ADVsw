@@ -41,7 +41,7 @@ exports.updateComment = (req, res) => {
   const { commentText } = req.body;
 
   const sql = 'UPDATE comments SET commentText = ? WHERE CommentID = ?';
-  const values = [commentText, CommentID]; // قم بإضافة CommentID إلى المصفوفة
+  const values = [commentText, CommentID];      
 
   db.query(sql, values, (err, results) => {
     if (err) {
