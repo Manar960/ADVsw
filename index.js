@@ -8,9 +8,19 @@ const environmentRouter = require('./routes/environment.router');
 const image = require('./routes/image.router');
 const comment = require('./routes/comment.router');
 const report = require('./routes/report.router');
+const setion = require('./config/setion');
+const session = require('express-session');
 
 app.use(express.json());
 app.use(cors());
+
+app.use(
+  session({
+    secret: setion.secretKey,
+    resave: false,
+    saveUninitialized: true,
+  })
+);
 
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messages);
