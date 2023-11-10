@@ -1,17 +1,23 @@
 const db = require('../config/db'); 
 
 exports.createComment = (req, res) => {
-  const {reportID,UserID,commentText } = req.body;
-  const sql = 'INSERT INTO comments (reportID,userID,commentText) VALUES (?, ?, ?)'; 
+  const { reportID, commentText } = req.body;
+  const userID = req.session.userID;        
 
-  const values = [reportID,UserID,commentText];
+  if (!userID) {
+    res.status(401).json({ error: 'User not logged in' });
+    return;
+  }
+
+  const sql = 'INSERT INTO comments (reportID, userID, commentText) VALUES (?, ?, ?)';
+  const values = [reportID, userID, commentText];
 
   db.query(sql, values, (err, results) => {
     if (err) {
       console.error(err);
       res.status(500).json({ error: 'Internal server error' });
     } else {
-      res.status(201).json({ message: ' ready!' }); 
+      res.status(201).json({ message: 'Comment created successfully' });
     }
   });
 };
@@ -69,25 +75,26 @@ exports.deleteComment = (req, res) => {
   });
 };
 
-exports.getCommentsByUserID = (req, res) => {
-    const userID = req.params.userID; 
-  
-    const sql = 'SELECT * FROM comments WHERE userID = ?';
-    const values = [userID];
-  
-    db.query(sql, values, (err, results) => {
-      if (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Internal server error' });
+exports.getCommentsByUserName = (req, res) => {
+  const username = req.params.username;
+
+  const sql = 'SELECT comments.*, user.Username AS author FROM comments JOIN user ON comments.userID = user.UserID WHERE user.Username = ?';
+  const values = [username];
+
+  db.query(sql, values, (err, results) => {
+    if (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Internal server error' });
+    } else {
+      if (results.length > 0) {
+        res.status(200).json(results);        
       } else {
-        if (results.length > 0) {
-          res.status(200).json(results);        
-        } else {
-          res.status(404).json({ message: 'No comments found for the specified user' });
-        }
+        res.status(404).json({ message: 'No comments found for the specified user' });
       }
-    });
-  };
+    }
+  });
+};
+
 
   exports.getCommentsForReport = (req, res) => {
     const reportID = req.params.reportid; 
