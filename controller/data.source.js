@@ -1,10 +1,10 @@
 const db = require('../config/db'); 
 
 exports.createDataSource = (req, res) => {
-  const { SourceID, Sourcename, Sourcetype } = req.body;
-  const sql = 'INSERT INTO DataSource (SourceID, Sourcename, Sourcetype) VALUES (?, ?, ?)'; 
+  const { Sourcename, Sourcetype } = req.body;
+  const sql = 'INSERT INTO DataSource ( Sourcename, Sourcetype) VALUES ( ?, ?)'; 
 
-  const values = [SourceID, Sourcename, Sourcetype];
+  const values = [ Sourcename, Sourcetype];
 
   db.query(sql, values, (err, results) => {
     if (err) {
