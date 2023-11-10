@@ -4,10 +4,7 @@ const db = require('../config/db');
 // Create 
 exports.createEnvironment = (req, res) => {
   const {
-    DataID,
-    UserID,
     SourceID,
-    TimeStamp,
     AirQuality,
     Humidity,
     WaterQuality,
@@ -24,45 +21,46 @@ exports.createEnvironment = (req, res) => {
     Location
   } = req.body;
 
-
+  const userID = req.session.userID;
+  if (!userID) {
+    res.status(401).json({ error: 'User not logged in' });
+    return;
+  }
 
   const sql = `
-    INSERT INTO environment (
-      DataID, UserID, SourceID, TimeStamp, AirQuality, Humidity, WaterQuality,
-      BiodiversityMetrics, WindSpeed, RainFall, PollutionLevels, SoilQuality,
-      UvIndex, NoiseLevels, Weather, EventDescription, Note
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
+    UPDATE environment
+    SET UserID = ?, AirQuality = ?, Humidity = ?, WaterQuality = ?,
+    BiodiversityMetrics = ?, WindSpeed = ?, RainFall = ?,
+    PollutionLevels = ?, SoilQuality = ?, UvIndex = ?,
+    NoiseLevels = ?, Weather = ?, EventDescription = ?, Note = ?
+    `;
+    const values = [
+      userID,
+      AirQuality,
+      Humidity,
+      WaterQuality,
+      BiodiversityMetrics,
+      WindSpeed,
+      RainFall,
+      PollutionLevels,
+      SoilQuality,
+      UvIndex,
+      NoiseLevels,
+      Weather,
+      EventDescription,
+      Note
+    ];
 
-  const values = [
-    DataID,
-    UserID,
-    SourceID,
-    TimeStamp,
-    AirQuality,
-    Humidity,
-    WaterQuality,
-    BiodiversityMetrics,
-    WindSpeed,
-    RainFall,
-    PollutionLevels,
-    SoilQuality,
-    UvIndex,
-    NoiseLevels,
-    Weather,
-    EventDescription,
-    Note,
-    Location
-  ];
+    db.query(sql, values, (err, results) => {
+      if (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Internal server error' });
+      } else {
+        res.status(201).json({ message: 'Environment record created' });
+      }
+    });
+  };
 
-  db.query(sql, values, (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
-    } else {
-      res.status(201).json({ message: 'Environment record created' });
-    }
-  });
-};
 
 // Retrieve 
 exports.getEnvironment = (req, res) => {
