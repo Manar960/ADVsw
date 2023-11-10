@@ -8,12 +8,15 @@ const messages = require('./routes/messages');
 const source = require('./routes/data.source');
 const environmentRouter = require('./routes/environment.router');
 const image = require('./routes/image.router');
+const EDResources = require('./routes/EDResources');
 
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messages);
 app.use('/api/dataSources', source);
 app.use('/api/environment', environmentRouter);
 app.use('/api/image', image);
+app.use('/api/image', image);
+app.use('/api/resources', EDResources);
 
 
 
