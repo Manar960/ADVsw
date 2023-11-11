@@ -1,17 +1,16 @@
 const axios = require('axios');
 
 exports.getWeatherForecast = async (req, res) => {
+  const { latitude, longitude } = req.query;
+  const location = latitude && longitude ? `${latitude},${longitude}` : '35.6895,139.6917';
+
   const options = {
     method: 'GET',
-    url: 'https://tomorrow-io1.p.rapidapi.com/v4/weather/forecast',
-    params: {
-      location: '42.15, 82,1',
-      timesteps: '1h',
-      units: 'metric'
-    },
+    url: 'https://weatherapi-com.p.rapidapi.com/forecast.json',
+    params: { q: location },
     headers: {
       'X-RapidAPI-Key': 'a4f129f80amsh13f65e4fc99cadbp146a82jsne1a43bb43377',
-      'X-RapidAPI-Host': 'tomorrow-io1.p.rapidapi.com'
+      'X-RapidAPI-Host': 'weatherapi-com.p.rapidapi.com'
     }
   };
 
@@ -23,3 +22,5 @@ exports.getWeatherForecast = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+
