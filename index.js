@@ -12,6 +12,7 @@ const report = require('./routes/report.router');
 const setion = require('./config/setion');
 const session = require('express-session');
 const weatherRouter = require('./routes/weather.router');
+const news = require('./routes/environmentalNews.router')
 
 
 app.use(express.json());
@@ -37,6 +38,7 @@ app.use('/api/comm', comment);
 app.use('/api/weather', weatherRouter);
 
 app.use('/api/report', report)
+app.use('/api/new',news)
 
 
 const port = process.env.PORT || 3000;
