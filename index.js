@@ -6,6 +6,7 @@ const messages = require('./routes/messages');
 const source = require('./routes/data.source');
 const environmentRouter = require('./routes/environment.router');
 const image = require('./routes/image.router');
+const EDResources = require('./routes/EDResources');
 const comment = require('./routes/comment.router');
 const report = require('./routes/report.router');
 const setion = require('./config/setion');
@@ -24,14 +25,19 @@ app.use(
   })
 );
 
+
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messages);
 app.use('/api/dataSources', source);
 app.use('/api/environment', environmentRouter);
+app.use('/api/resources', EDResources);
 app.use('/api/img', image);
 app.use('/api/comm', comment);
-app.use('/api/report', report);
+
 app.use('/api/weather', weatherRouter);
+
+app.use('/api/report', report)
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
