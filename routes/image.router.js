@@ -3,8 +3,10 @@ const router = express.Router();
 const { uploadFile } = require("../controller/data.image");
 const { deleteImage } = require("../controller/data.image");
 const { listImages } = require("../controller/data.image");
+const authMiddleware = require('../middleware/autho')
 
 const firebase = require("firebase/app");
+router.use(authMiddleware);
 
 router.get("/", (req, res) => {
   res.json("Firebase Storage");
