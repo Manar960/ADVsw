@@ -13,7 +13,7 @@ const setion = require('./config/setion');
 const session = require('express-session');
 const weatherRouter = require('./routes/weather.router');
 const news = require('./routes/environmentalNews.router')
-
+const openDataRoutes = require('./routes/openDataRoutes'); 
 
 app.use(express.json());
 app.use(cors());
@@ -39,7 +39,7 @@ app.use('/api/weather', weatherRouter);
 
 app.use('/api/report', report)
 app.use('/api/new',news)
-
+app.use('/api/openData', openDataRoutes);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
