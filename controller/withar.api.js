@@ -1,8 +1,9 @@
 const axios = require('axios');
 
 exports.getWeatherForecast = async (req, res) => {
-  const { latitude, longitude } = req.query;
-  const location = latitude && longitude ? `${latitude},${longitude}` : '35.6895,139.6917';
+  // استخراج الإحداثيات من الـ URL parameters
+  const { latitude, longitude } = req.params;
+  const location = `${latitude},${longitude}`;
 
   const options = {
     method: 'GET',
@@ -22,5 +23,3 @@ exports.getWeatherForecast = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
-
