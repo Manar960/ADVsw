@@ -1,4 +1,4 @@
-const db = require('../config/db'); // Import your database connection
+const db = require('../config/db'); 
 exports.getEdresources = (req, res) => {
  const sql = 'SELECT * FROM resources';
 

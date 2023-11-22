@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router(); 
+const authMiddleware = require('../middleware/autho')
+router.use(authMiddleware);
 const EdresourcesController = require('../controller/EDResourcescontroller');
 router.get('/', EdresourcesController.getEdresources);
 router.get('/search', EdresourcesController.getspecificEdresources);
