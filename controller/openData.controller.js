@@ -15,25 +15,12 @@ exports.getAllEnvironmentData = (req, res) => {
 };
 
 
-exports.getEnvironmentDataByLocation = (req, res) => {
-  const location = req.params.location;
-  const sql = 'SELECT * FROM environment WHERE Location = ?';
-  const values = [location];
 
-  db.query(sql, values, (err, results) => {
-    if (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Internal server error' });
-    } else {
-      res.status(200).json(results);
-    }
-  });
-};
 
-exports.getEnvironmentDataByNameAndNote = (req, res) => {
+exports.getEnvironmentDataByNote = (req, res) => {
     const { name, note } = req.query;
-    const sql = 'SELECT * FROM environment WHERE Name = ? AND Note = ?';
-    const values = [name, note];
+    const sql = 'SELECT * FROM environment WHERE  Note = ?';
+    const values = [ note];
   
     db.query(sql, values, (err, results) => {
       if (err) {
