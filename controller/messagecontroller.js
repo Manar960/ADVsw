@@ -7,7 +7,7 @@ exports.sendmessages = (req, res) => {
       return res.status(400).json({ error: 'Missing sender_id, receiver_id, or message' });
     }
   
-    const query = 'INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)';
+    const query = 'INSERT INTO messagess (sender_id, receiver_id, message) VALUES (?, ?, ?)';
     db.query(query, [sender_id, receiver_id, message], (err, result) => {
       if (err) {
         console.error('Error creating message: ' + err.message);
@@ -25,7 +25,7 @@ exports.receivemessages = (req, res) => {
       return res.status(400).json({ error: 'Missing user_id' });
     }
   
-    const query = 'SELECT * FROM messages WHERE sender_id = ? OR receiver_id = ?';
+    const query = 'SELECT * FROM messagess WHERE sender_id = ? OR receiver_id = ?';
     db.query(query, [user_id, user_id], (err, results) => {
       if (err) {
         console.error('Error fetching messages: ' + err.message);

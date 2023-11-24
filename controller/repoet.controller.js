@@ -2,9 +2,12 @@ const db = require('../config/db');
 
 exports.createReports = (req, res) => {
   const {reportType,location,descreption } = req.body;
-  const sql = 'INSERT INTO reports (reportType,location,descreption) VALUES (?, ?, ?)'; 
-
-  const values = [reportType,location,descreption];
+  const userID = req.session.userID;
+  if (!userID) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const sql = 'INSERT INTO reports (reportType,location,descreption,userID) VALUES (?, ?, ?,?)'; 
+  const values = [reportType,location,descreption,userID];
 
   db.query(sql, values, (err, results) => {
     if (err) {
