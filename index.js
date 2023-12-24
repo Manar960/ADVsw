@@ -14,6 +14,7 @@ const session = require('express-session');
 const weatherRouter = require('./routes/weather.router');
 const news = require('./routes/environmentalNews.router')
 const openDataRoutes = require('./routes/openDataRoutes'); 
+const alerts=require('./routes/alerts.router');
 
 app.use(express.json());
 app.use(cors());
@@ -37,9 +38,10 @@ app.use('/api/comm', comment);
 
 app.use('/api/weather', weatherRouter);
 
-app.use('/api/report', report)
-app.use('/api/new',news)
+app.use('/api/report', report);
+app.use('/api/new',news);
 app.use('/api/openData', openDataRoutes);
+app.use('/api/alerts',alerts);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
