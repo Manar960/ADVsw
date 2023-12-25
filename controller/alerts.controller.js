@@ -65,3 +65,26 @@ exports.updateUserAlert = (req, res) => {
     });
   });
 };
+
+exports.deleteUserAlert = (req, res) => {
+  const userId = req.params.user_id;
+  const environmentId = req.params.environment_id;
+
+  if (!userId || !environmentId) {
+    return res.status(400).json({ error: 'Missing required parameters' });
+  }
+
+  const deleteAlertQuery = 'DELETE FROM user_alerts WHERE user_id = ? AND environmental_id = ?';
+  db.query(deleteAlertQuery, [userId, environmentId], (err, deleteResult) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (deleteResult.affectedRows === 0) {
+      return res.status(404).json({ message: 'Alert not found for this user' });
+    }
+
+    return res.status(200).json({ message: 'Alert deleted successfully' });
+  });
+};
