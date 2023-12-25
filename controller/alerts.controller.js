@@ -31,3 +31,37 @@ exports.setUserAlert = (req, res) => {
     });
   });
 };
+
+
+
+exports.updateUserAlert = (req, res) => {
+  const userId = req.params.user_id;
+  const environmentId = req.params.environment_id;
+  const newThreshold = req.body.new_threshold;
+
+  if (!userId || !environmentId || !newThreshold) {
+    return res.status(400).json({ error: 'Missing required parameters' });
+  }
+
+  const checkUserAlertQuery = 'SELECT * FROM user_alerts WHERE user_id = ? AND environmental_id = ?';
+  db.query(checkUserAlertQuery, [userId, environmentId], (err, alertResults) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+    if (alertResults.length === 0) {
+      return res.status(404).json({ message: 'User alert not found' });
+    }
+
+    const updateAlertQuery = 'UPDATE user_alerts SET threshold = ? WHERE user_id = ? AND environmental_id = ?';
+    db.query(updateAlertQuery, [newThreshold, userId, environmentId], (err, updateResult) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+      
+      return res.status(200).json({ message: 'Threshold updated successfully' });
+    });
+  });
+};
