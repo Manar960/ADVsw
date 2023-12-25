@@ -10,27 +10,52 @@ exports.setUserAlert = (req, res) => {
   }
 
   const checkUserQuery = 'SELECT * FROM user WHERE UserID = ?';
-  db.query(checkUserQuery, [userId], (err, results) => {
+  db.query(checkUserQuery, [userId], (err, userResults) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Internal server error' });
     }
 
-    if (results.length === 0) {
+    if (userResults.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const setUserAlertQuery = 'INSERT INTO user_alerts (user_id, environmental_id, threshold) VALUES (?, ?, ?)';
-    db.query(setUserAlertQuery, [userId, environmentId, threshold], (err, insertResult) => {
+    const checkExistingAlertQuery = 'SELECT * FROM user_alerts WHERE user_id = ? AND environmental_id = ?';
+    db.query(checkExistingAlertQuery, [userId, environmentId], (err, alertResults) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: 'Internal server error' });
       }
-      
-      return res.status(201).json({ message: 'Alert set successfully' });
+
+      if (alertResults.length > 0) {
+        return res.status(409).json({ message: 'Alert already exists for this user and environment' });
+      }
+
+      const checkEnvParameterQuery = 'SELECT * FROM env_parameters WHERE id = ?';
+      db.query(checkEnvParameterQuery, [environmentId], (err, envResults) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        if (envResults.length === 0) {
+          return res.status(404).json({ message: 'Environment parameter not found' });
+        }
+
+        const setUserAlertQuery = 'INSERT INTO user_alerts (user_id, environmental_id, threshold) VALUES (?, ?, ?)';
+        db.query(setUserAlertQuery, [userId, environmentId, threshold], (err, insertResult) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Internal server error' });
+          }
+
+          return res.status(201).json({ message: 'Alert set successfully' });
+        });
+      });
     });
   });
 };
+
 
 
 
