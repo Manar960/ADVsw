@@ -1,9 +1,27 @@
 const db = require('../config/db');
 const bcrypt = require('bcrypt');
 
+
+function isValidEmail(email) {
+  const emailFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailFormat.test(email);
+}
+
+function isValidPassword(password) {
+  const passwordFormat = /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+])[A-Za-z\d!@#$%^&*()_+]{8,}$/;
+  return passwordFormat.test(password);
+}
 exports.createUser = (req, res) => {
   const { Username, Email, location, interests, Password } = req.body;
+  if (!isValidEmail(Email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
 
+  if (!isValidPassword(Password)) {
+    return res.status(400).json({
+      error: 'Invalid password format. It should be at least 8 characters long, contain one uppercase letter, one digit, and one special character.',
+    });
+  }
   const checkUserQuery = 'SELECT * FROM user WHERE Username = ? OR Email = ?';
   const checkUserValues = [Username, Email];
 
