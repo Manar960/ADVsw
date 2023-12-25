@@ -1,5 +1,22 @@
 const db = require('../config/db');
 
+
+const { initializeApp,applicationDefault } = require('firebase-admin/app');
+const { getMessaging } = require('firebase-admin/messaging');
+
+
+process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+initializeApp({
+  credential:applicationDefault(),
+  projectId: 'env-alert',
+});
+
+
+
+
+
+
 exports.setUserAlert = (req, res) => {
   const userId = req.params.user_id;
   const environmentId = req.query.environment_id;
@@ -113,3 +130,65 @@ exports.deleteUserAlert = (req, res) => {
     return res.status(200).json({ message: 'Alert deleted successfully' });
   });
 };
+
+
+
+const sendPushNotification = async (deviceToken) => {
+  const messaging = getMessaging();
+
+  try {
+    const message = {
+      notification: {
+        title: "Environmental Alert:",
+        body: "High wind speed",
+      },
+      token: deviceToken, 
+    };
+
+    const response = await messaging.send(message);
+    console.log('Notification sent:', response);
+    return response;
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    throw error;
+  }
+};
+
+const compareThresholdAndCurrentValue = async () => {
+  try {
+    const userAlerts = await db.query('SELECT * FROM user_alerts');
+    const userAlertsArray = Array.isArray(userAlerts) ? userAlerts : [userAlerts];
+
+    for (const userAlert of userAlertsArray.flat()) {
+      const { environmental_id, threshold, user_id } = userAlert;
+
+      try {
+        const envResults = await db.query('SELECT * FROM env_parameters WHERE id = ?', [environmental_id]);
+
+        if (!envResults || envResults.length === 0 || !envResults[0].hasOwnProperty('current_value')) {
+          console.error('Invalid or empty result for environmental parameter ID:', environmental_id);
+          continue; // Move to the next iteration
+        }
+
+        const currentValue = envResults[0].current_value;
+        if (currentValue > threshold) {
+      
+          try {
+            const deviceToken = '$2b$10$nz0gzqm6zXQoica2bEonUOLmeEyDvFXi/MqSakb5Xj4JOeSmKpYzG';
+            await sendPushNotification(deviceToken);
+          } catch (error) {
+            console.error('Error sending push notification:', error);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching environmental parameters:', err);
+        // Handle error if necessary
+      }
+    }
+  } catch (error) {
+    console.error('Error comparing values:', error);
+    throw error;
+  }
+};
+
+
