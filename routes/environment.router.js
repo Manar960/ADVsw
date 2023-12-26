@@ -11,4 +11,8 @@ router.put('/:dataid', environmentController.updateEnvironment);
 
 router.delete('/:dataid', environmentController.deleteEnvironment);
 
+router.put('/updateScore/:userId', environmentController.updateScore);
+
+router.put('/:dataId/reportFake', environmentController.updateReportFake);
+
 module.exports = router;
