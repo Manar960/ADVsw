@@ -55,9 +55,52 @@ exports.createEnvironment = (req, res) => {
       console.error(err);
       res.status(500).json({ error: 'Internal server error' });
     } else {
-      updateScore(userID);
+      // Update score and badge
+      const userID = req.session.userID;
+      if (!userID) {
+        res.status(401).json({ error: 'User not logged in' });
+        return;
+      }
 
-      res.status(201).json({ message: 'Environment record created' });
+      const getUserQuery = 'SELECT * FROM user WHERE UserID = ?';
+      db.query(getUserQuery, [userID], (err, userResult) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        if (userResult.length === 0) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+        const currentScore = userResult[0].score || 0;
+        const newScore = currentScore + 1;
+
+        const updateBadgeQuery = `
+          UPDATE user 
+          SET score = ?, 
+              badge = 
+                  CASE 
+                      WHEN score < 50 THEN 'Bronze'
+                      WHEN score >= 50 AND score <= 99 THEN 'Silver'
+                      ELSE 'Gold'
+                  END 
+          WHERE UserID = ?;
+        `;
+
+        db.query(updateBadgeQuery, [newScore, userID], (err, updateResult) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: 'Internal server error' });
+          }
+
+          if (updateResult.affectedRows === 0) {
+            return res.status(404).json({ message: 'User not found' });
+          }
+
+          res.status(201).json({ message: 'Environment record created' });
+        });
+      });
     }
   });
 };
@@ -154,43 +197,54 @@ exports.getEnvironment = (req, res) => {
     });
   };
 
-  exports.updateScore = (userID) => {
+  exports.updateScore = (req, res) => {
+    const userID = req.params.userId;
+  
     if (!userID) {
-      return Promise.reject({ error: 'Missing required parameters' });
+        return res.status(400).json({ error: 'Missing required parameters' });
     }
   
     const getUserQuery = 'SELECT * FROM user WHERE UserID = ?';
-    return new Promise((resolve, reject) => {
-      db.query(getUserQuery, [userID], (err, userResult) => {
+    db.query(getUserQuery, [userID], (err, userResult) => {
         if (err) {
-          console.error(err);
-          reject({ error: 'Internal server error' });
+            console.error(err);
+            return res.status(500).json({ error: 'Internal server error' });
         }
   
         if (userResult.length === 0) {
-          reject({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
-
+  
         const currentScore = userResult[0].score || 0;
         const newScore = currentScore + 1;
   
-        const updateScoreQuery = 'UPDATE user SET score = ? WHERE UserID = ?';
-        db.query(updateScoreQuery, [newScore, userID], (err, updateResult) => {
-          if (err) {
-            console.error(err);
-            reject({ error: 'Internal server error' });
-          }
+        const updateBadgeQuery = `
+            UPDATE user 
+            SET score = ?, 
+                badge = 
+                    CASE 
+                        WHEN score < 50 THEN 'Bronze'
+                        WHEN score >= 50 AND score <= 99 THEN 'Silver'
+                        ELSE 'Gold'
+                    END 
+            WHERE UserID = ?;
+        `;
   
-          if (updateResult.affectedRows === 0) {
-            reject({ message: 'User not found' });
-          }
+        db.query(updateBadgeQuery, [newScore, userID], (err, updateResult) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Internal server error' });
+            }
   
-          resolve({ message: 'User score updated successfully' });
+            if (updateResult.affectedRows === 0) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+  
+            return res.status(200).json({ message: 'User score and badge updated successfully' });
         });
-      });
     });
-  };
-  
+};
+
   
   exports.updateReportFake = (req, res) => {
     const dataID = req.params.dataId;
@@ -210,32 +264,45 @@ exports.getEnvironment = (req, res) => {
         return res.status(404).json({ message: 'Environment data not found' });
       }
   
-      const updateReportFakeQuery = 'UPDATE environment SET reportFake = reportFake - 1 WHERE DataID = ?';
-      db.query(updateReportFakeQuery, [dataID], (err, updateResult) => {
+      const userID = environmentResult[0].UserID;
+      const decrementScoreQuery = 'UPDATE `user` SET `score` = `score` - 1 WHERE `UserID` = ?';
+      db.query(decrementScoreQuery, [userID], (err, decrementResult) => {
         if (err) {
           console.error(err);
           return res.status(500).json({ error: 'Internal server error' });
         }
   
-        if (updateResult.affectedRows === 0) {
-          return res.status(404).json({ message: 'Environment data not found' });
+        if (decrementResult.affectedRows === 0) {
+          return res.status(404).json({ message: 'User not found' });
         }
-
-        const userID = environmentResult[0].UserID; 
-        const decrementScoreQuery = 'UPDATE `user` SET `score` = `score` - 1 WHERE `UserID` = ?';
-        db.query(decrementScoreQuery, [userID], (err, decrementResult) => {
+  
+        const updateBadgeQuery = `
+          UPDATE user 
+          SET badge = 
+            CASE 
+              WHEN score < 50 THEN 'Bronze'
+              WHEN score >= 50 AND score <= 99 THEN 'Silver'
+              ELSE 'Gold'
+            END 
+          WHERE UserID = ?;
+        `;
+        db.query(updateBadgeQuery, [userID], (err, updateBadgeResult) => {
           if (err) {
             console.error(err);
             return res.status(500).json({ error: 'Internal server error' });
           }
   
-          if (decrementResult.affectedRows === 0) {
-            return res.status(404).json({ message: 'User not found' });
-          }
+          const decrementReportFakeQuery = 'UPDATE environment SET reportFake = reportFake - 1 WHERE DataID = ?';
+          db.query(decrementReportFakeQuery, [dataID], (err, decrementReportResult) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ error: 'Internal server error' });
+            }
   
-          return res.status(200).json({ message: 'Report fake status updated successfully' });
+            return res.status(200).json({ message: 'Report fake status and badge updated successfully' });
+          });
         });
       });
     });
-};
-
+  };
+  
