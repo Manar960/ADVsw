@@ -15,8 +15,6 @@ initializeApp({
 
 
 
-
-
 exports.setUserAlert = (req, res) => {
   const userId = req.params.user_id;
   const environmentId = req.query.environment_id;
@@ -60,13 +58,35 @@ exports.setUserAlert = (req, res) => {
         }
 
         const setUserAlertQuery = 'INSERT INTO user_alerts (user_id, environmental_id, threshold) VALUES (?, ?, ?)';
-        db.query(setUserAlertQuery, [userId, environmentId, threshold], (err, insertResult) => {
+        db.query(setUserAlertQuery, [userId, environmentId, threshold], async (err, insertResult) => {
           if (err) {
             console.error(err);
             return res.status(500).json({ error: 'Internal server error' });
           }
 
-          return res.status(201).json({ message: 'Alert set successfully' });
+          const fetchCurrentValueQuery = 'SELECT current_value, environment_parameter FROM env_parameters WHERE id = ?';
+          db.query(fetchCurrentValueQuery, [environmentId], async (err, currentValueResult) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            const current_value = currentValueResult[0].current_value;
+            const environment_parameter=currentValueResult[0].environment_parameter;
+            if (current_value > threshold) {
+           
+              try {
+                
+                console.log(`Push notification sent for user ${userId} `);
+                console.log(`Environment Alert: High ${environment_parameter}`);
+              } catch (error) {
+                console.error('Error sending push notification:', error);
+                return res.status(500).json({ error: 'Error sending push notification' });
+              }
+            }
+
+            return res.status(201).json({ message: 'Alert set successfully' });
+          });
         });
       });
     });
@@ -102,11 +122,33 @@ exports.updateUserAlert = (req, res) => {
         console.error(err);
         return res.status(500).json({ error: 'Internal server error' });
       }
+      const fetchCurrentValueQuery = 'SELECT current_value, environment_parameter FROM env_parameters WHERE id = ?';
+          db.query(fetchCurrentValueQuery, [environmentId], async (err, currentValueResult) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            const current_value = currentValueResult[0].current_value;
+            const environment_parameter=currentValueResult[0].environment_parameter;
+            if (current_value > newThreshold) {
+           
+              try {
+                console.log(`Push notification sent for user ${userId} `);
+                console.log(`Environment Alert: High ${environment_parameter}`);
+              } catch (error) {
+                console.error('Error sending push notification:', error);
+                return res.status(500).json({ error: 'Error sending push notification' });
+              }
+            }
       
-      return res.status(200).json({ message: 'Threshold updated successfully' });
+            return res.status(200).json({ message: 'Threshold updated successfully' });
+          })
     });
   });
 };
+
+
 
 exports.deleteUserAlert = (req, res) => {
   const userId = req.params.user_id;
@@ -132,63 +174,52 @@ exports.deleteUserAlert = (req, res) => {
 };
 
 
-
-const sendPushNotification = async (deviceToken) => {
-  const messaging = getMessaging();
-
-  try {
-    const message = {
-      notification: {
-        title: "Environmental Alert:",
-        body: "High wind speed",
-      },
-      token: deviceToken, 
-    };
-
-    const response = await messaging.send(message);
-    console.log('Notification sent:', response);
-    return response;
-  } catch (error) {
-    console.error('Error sending notification:', error);
-    throw error;
+exports.updateEnvironmentValue = (req, res) => {
+  const { id } = req.params;
+  const newCurrentValue = req.body.new_current_value;
+  if (!id || !newCurrentValue) {
+    return res.status(400).json({ error: 'Missing required parameters' });
   }
-};
 
-const compareThresholdAndCurrentValue = async () => {
-  try {
-    const userAlerts = await db.query('SELECT * FROM user_alerts');
-    const userAlertsArray = Array.isArray(userAlerts) ? userAlerts : [userAlerts];
-
-    for (const userAlert of userAlertsArray.flat()) {
-      const { environmental_id, threshold, user_id } = userAlert;
-
-      try {
-        const envResults = await db.query('SELECT * FROM env_parameters WHERE id = ?', [environmental_id]);
-
-        if (!envResults || envResults.length === 0 || !envResults[0].hasOwnProperty('current_value')) {
-          console.error('Invalid or empty result for environmental parameter ID:', environmental_id);
-          continue; // Move to the next iteration
-        }
-
-        const currentValue = envResults[0].current_value;
-        if (currentValue > threshold) {
-      
-          try {
-            const deviceToken = '$2b$10$nz0gzqm6zXQoica2bEonUOLmeEyDvFXi/MqSakb5Xj4JOeSmKpYzG';
-            await sendPushNotification(deviceToken);
-          } catch (error) {
-            console.error('Error sending push notification:', error);
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching environmental parameters:', err);
-        // Handle error if necessary
-      }
+  const updateQuery = 'UPDATE env_parameters SET current_value = ? WHERE id = ?';
+  db.query(updateQuery, [newCurrentValue, id], (err, updateResult) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
     }
-  } catch (error) {
-    console.error('Error comparing values:', error);
-    throw error;
-  }
+
+    if (updateResult.affectedRows === 0) {
+      return res.status(404).json({ message: 'Environment parameter not found' });
+    }
+    const fetchUserAlertsQuery = `
+    SELECT ua.user_id, ua.threshold, ep.environment_parameter
+    FROM user_alerts ua
+    JOIN env_parameters ep ON ua.environmental_id = ep.id
+    WHERE ua.environmental_id = ? AND ua.threshold < ?
+   `;
+
+  db.query(fetchUserAlertsQuery, [id, newCurrentValue], (err, userAlerts) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+
+   
+    userAlerts.forEach((userAlert) => {
+
+     
+      console.log(`Push notification sent for user ${userAlert.user_id} `);
+      console.log(`Environment Alert: High ${userAlert.environment_parameter}`);
+    });
+
+
+    return res.status(200).json({ message: 'Current value updated successfully' });
+  })
+  });
 };
+
+
+
+
 
 
